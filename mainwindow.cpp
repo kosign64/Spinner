@@ -18,7 +18,8 @@
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+      converting(false)
 {
     mainWidget_ = new QWidget(this);
     originalImageLabel_ = new QLabel(mainWidget_);
@@ -39,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     segmentsNumberEdit_ = new QLineEdit(tr("64"), mainWidget_);
     segmentsLabel_ = new QLabel(tr("Количество сегментов:"),
                                 mainWidget_);
+    convertButton_->setEnabled(false);
     progressBar_ = new QProgressBar(mainWidget_);
     progressBar_->setValue(0);
     progressBar_->setRange(0, 100);
@@ -130,6 +132,8 @@ void MainWindow::onTimer()
 void MainWindow::onConvertDone()
 {
     playSpnButton_->setEnabled(true);
+    convertButton_->setEnabled(true);
+    converting = false;
 }
 
 void MainWindow::openFile()
@@ -144,6 +148,10 @@ void MainWindow::openFile()
     originalAnimation_->setFileName(filename_);
     originalImageLabel_->setMovie(originalAnimation_);
     playFileButton_->setText(tr("Проиграть"));
+    if(!converting)
+    {
+        convertButton_->setEnabled(true);
+    }
 }
 
 void MainWindow::playFile()
@@ -178,6 +186,8 @@ void MainWindow::convert()
 {
     if(filename_.isEmpty()) return;
     playSpnButton_->setEnabled(false);
+    convertButton_->setEnabled(false);
+    converting = true;
     playSpnButton_->setText(tr("Проиграть"));
     if(timer_->isActive()) timer_->stop();
     QtConcurrent::run(converter_,

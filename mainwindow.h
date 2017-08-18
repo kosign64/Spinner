@@ -48,6 +48,8 @@ private:
     QString filename_;
     QTimer *timer_;
 
+    bool converting;
+
 
 private slots:
     void openFile();
