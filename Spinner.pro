@@ -32,3 +32,9 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
     spinnerconverter.h
+
+DISTFILES += \
+    style.css
+
+RESOURCES += \
+    resource.qrc

@@ -25,10 +25,10 @@ MainWindow::MainWindow(QWidget *parent)
     resultImageLabel_ = new QLabel(mainWidget_);
     openFileButton_ = new QPushButton(tr("Открыть файл"),
                                       mainWidget_);
-    playFileButton_ = new QPushButton(mainWidget_);
+    playFileButton_ = new QPushButton(tr("Проиграть"), mainWidget_);
     openSpnButton_ = new QPushButton(tr("Открыть spn файл"),
                                      mainWidget_);
-    playSpnButton_ = new QPushButton(mainWidget_);
+    playSpnButton_ = new QPushButton(tr("Проиграть"), mainWidget_);
     convertButton_ = new QPushButton(tr("Преобразовать"),
                                      mainWidget_);
     saveAsButton_ = new QPushButton(tr("Сохранить как..."),
@@ -149,10 +149,12 @@ void MainWindow::playFile()
 {
     if(originalAnimation_->state() == QMovie::Running)
     {
+        playFileButton_->setText("Проиграть");
         originalAnimation_->setPaused(true);
     }
     else
     {
+        playFileButton_->setText("Пауза");
         originalAnimation_->start();
     }
 }
@@ -161,10 +163,12 @@ void MainWindow::playSpn()
 {
     if(timer_->isActive())
     {
+        playSpnButton_->setText("Проиграть");
         timer_->stop();
     }
     else
     {
+        playSpnButton_->setText("Пауза");
         timer_->start(1000 / 10);
     }
 }
@@ -173,6 +177,7 @@ void MainWindow::convert()
 {
     if(filename_.isEmpty()) return;
     playSpnButton_->setEnabled(false);
+    playSpnButton_->setText("Проиграть");
     if(timer_->isActive()) timer_->stop();
     QtConcurrent::run(converter_,
                       &SpinnerConverter::convert,

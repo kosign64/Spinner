@@ -1,0 +1,53 @@
+MainWindow {
+    background-color: #212121;
+}
+
+QPushButton {
+    min-height: 1.5em;
+    min-width: 6em;
+    padding: 0.3em;
+    font: bold 14px;
+    margin: 0 1px 0 1px;
+    color: white;
+    background-color: #212121;
+    border-style: outset;
+    border-width: 2px;
+    border-color: white;
+}
+
+QPushButton:hover {
+    background-color: #414141;
+}
+
+QPushButton:pressed {
+    background-color: #414141;
+    color: yellow;
+}
+
+QPushButton::disabled {
+    color: #909090;
+}
+
+QLabel {
+    font: bold 14px;
+    color: white;
+}
+
+QProgressBar {
+    text-align: center;
+    background-color: #424242;
+    color: white;
+    border-radius: 4px;
+}
+
+QProgressBar::chunk {
+    background-color: #909090;
+    border-radius: 4px;
+}
+
+QLineEdit {
+    background-color: #414141;
+    font: bold 14px;
+    color: white;
+    selection-background-color: black;
+}

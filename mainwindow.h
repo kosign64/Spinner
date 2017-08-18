@@ -48,6 +48,7 @@ private:
     QString filename_;
     QTimer *timer_;
 
+
 private slots:
     void openFile();
     void playFile();
