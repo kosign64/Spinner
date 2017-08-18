@@ -143,18 +143,19 @@ void MainWindow::openFile()
     originalAnimation_->stop();
     originalAnimation_->setFileName(filename_);
     originalImageLabel_->setMovie(originalAnimation_);
+    playFileButton_->setText(tr("Проиграть"));
 }
 
 void MainWindow::playFile()
 {
     if(originalAnimation_->state() == QMovie::Running)
     {
-        playFileButton_->setText("Проиграть");
+        playFileButton_->setText(tr("Проиграть"));
         originalAnimation_->setPaused(true);
     }
     else
     {
-        playFileButton_->setText("Пауза");
+        playFileButton_->setText(tr("Пауза"));
         originalAnimation_->start();
     }
 }
@@ -163,12 +164,12 @@ void MainWindow::playSpn()
 {
     if(timer_->isActive())
     {
-        playSpnButton_->setText("Проиграть");
+        playSpnButton_->setText(tr("Проиграть"));
         timer_->stop();
     }
     else
     {
-        playSpnButton_->setText("Пауза");
+        playSpnButton_->setText(tr("Пауза"));
         timer_->start(1000 / 10);
     }
 }
@@ -177,7 +178,7 @@ void MainWindow::convert()
 {
     if(filename_.isEmpty()) return;
     playSpnButton_->setEnabled(false);
-    playSpnButton_->setText("Проиграть");
+    playSpnButton_->setText(tr("Проиграть"));
     if(timer_->isActive()) timer_->stop();
     QtConcurrent::run(converter_,
                       &SpinnerConverter::convert,
