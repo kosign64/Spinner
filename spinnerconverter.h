@@ -32,13 +32,17 @@ private:
 
     void convertFrame(QImage &frame);
     QColor floodColor(QPoint start, QImage &flood,
-                      const QImage &frame);
+                      const QImage &frame, QPainter &painter);
     void recursFloodColor(QPoint point, QImage &flood,
-                          const QImage &frame, ColorCounter &counter);
+                          const QImage &frame, ColorCounter &counter,
+                          QPainter &painter);
     void floodPaint(QPoint point, const QColor &color, QImage &flood,
-                    QImage &frame);
+                    QImage &frame, QPainter &painter,
+                    QPainter &floodPainter);
 
 signals:
+    void progress(int progress);
+    void done();
 
 public slots:
 };

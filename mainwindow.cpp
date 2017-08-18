@@ -11,6 +11,10 @@
 #include <QFileDialog>
 #include <QMovie>
 #include <QImage>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
+#include <QProgressBar>
+#include <QTimer>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -19,22 +23,28 @@ MainWindow::MainWindow(QWidget *parent)
     mainWidget_ = new QWidget(this);
     originalImageLabel_ = new QLabel(mainWidget_);
     resultImageLabel_ = new QLabel(mainWidget_);
-    openFileButton_ = new QPushButton(trUtf8("Открыть файл"),
+    openFileButton_ = new QPushButton(tr("Открыть файл"),
                                       mainWidget_);
     playFileButton_ = new QPushButton(mainWidget_);
-    openSpnButton_ = new QPushButton(trUtf8("Открыть spn файл"),
+    openSpnButton_ = new QPushButton(tr("Открыть spn файл"),
                                      mainWidget_);
     playSpnButton_ = new QPushButton(mainWidget_);
-    convertButton_ = new QPushButton(trUtf8("Преобразовать"),
+    convertButton_ = new QPushButton(tr("Преобразовать"),
                                      mainWidget_);
-    saveAsButton_ = new QPushButton(trUtf8("Сохранить как..."),
+    saveAsButton_ = new QPushButton(tr("Сохранить как..."),
                                     mainWidget_);
-    ledsNumberEdit_ = new QLineEdit(trUtf8("8"), mainWidget_);
-    ledsLabel_ = new QLabel(trUtf8("Количество светодиодов:"),
+    ledsNumberEdit_ = new QLineEdit(tr("8"), mainWidget_);
+    ledsLabel_ = new QLabel(tr("Количество светодиодов:"),
                             mainWidget_);
-    segmentsNumberEdit_ = new QLineEdit(trUtf8("32"), mainWidget_);
-    segmentsLabel_ = new QLabel(trUtf8("Количество сегментов:"),
+    segmentsNumberEdit_ = new QLineEdit(tr("64"), mainWidget_);
+    segmentsLabel_ = new QLabel(tr("Количество сегментов:"),
                                 mainWidget_);
+    progressBar_ = new QProgressBar(mainWidget_);
+    progressBar_->setValue(0);
+    progressBar_->setRange(0, 100);
+
+    playFileButton_->setEnabled(false);
+    playSpnButton_->setEnabled(false);
     mainLayout_ = new QGridLayout;
     mainLayout_->addWidget(originalImageLabel_, 0, 0, 1, 2,
                            Qt::AlignCenter);
@@ -60,6 +70,8 @@ MainWindow::MainWindow(QWidget *parent)
                            Qt::AlignCenter);
     mainLayout_->addWidget(saveAsButton_, 6, 2, 1, 1,
                            Qt::AlignCenter);
+    mainLayout_->addWidget(progressBar_, 7, 1, 1, 2,
+                           Qt::AlignCenter);
 
     QRect screenSize = QApplication::desktop()->screenGeometry();
     const int imageWidgetSize = screenSize.width() / 3;
@@ -67,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
     originalImageLabel_->setFixedSize(imageWidgetSize,
                                       imageWidgetSize);
     resultImageLabel_->setFixedSize(originalImageLabel_->size());
+    progressBar_->setFixedWidth(imageWidgetSize);
     originalImageLabel_->setScaledContents(true);
 
     mainWidget_->setLayout(mainLayout_);
@@ -75,12 +88,22 @@ MainWindow::MainWindow(QWidget *parent)
     originalAnimation_ = new QMovie(this);
     converter_ = new SpinnerConverter(imageWidgetSize, this);
 
+    timer_ = new QTimer(this);
+
     connect(openFileButton_, &QPushButton::clicked, this,
             &MainWindow::openFile);
     connect(playFileButton_, &QPushButton::clicked, this,
             &MainWindow::playFile);
+    connect(playSpnButton_, &QPushButton::clicked, this,
+            &MainWindow::playSpn);
     connect(convertButton_, &QPushButton::clicked, this,
             &MainWindow::convert);
+    connect(timer_, &QTimer::timeout, this,
+            &MainWindow::onTimer);
+    connect(converter_, &SpinnerConverter::progress,
+            progressBar_, &QProgressBar::setValue);
+    connect(converter_, &SpinnerConverter::done,
+            this, &MainWindow::onConvertDone);
 }
 
 MainWindow::~MainWindow()
@@ -96,11 +119,17 @@ void MainWindow::keyPressEvent(QKeyEvent *ev)
     }
 }
 
-void MainWindow::timerEvent(QTimerEvent *)
+void MainWindow::onTimer()
 {
     static int i = 0;
     if(i >= resultAnimation_->size()) i = 0;
-    resultImageLabel_->setPixmap(QPixmap::fromImage(resultAnimation_->operator [](i++)));
+    resultImageLabel_->setPixmap(
+             QPixmap::fromImage(resultAnimation_->operator [](i++)));
+}
+
+void MainWindow::onConvertDone()
+{
+    playSpnButton_->setEnabled(true);
 }
 
 void MainWindow::openFile()
@@ -110,6 +139,7 @@ void MainWindow::openFile()
                                              QString(),
                      tr("Анимация *.gif (*.gif);; Все файлы (*.*)"));
     if(filename_.isEmpty()) return;
+    playFileButton_->setEnabled(true);
     originalAnimation_->stop();
     originalAnimation_->setFileName(filename_);
     originalImageLabel_->setMovie(originalAnimation_);
@@ -127,11 +157,27 @@ void MainWindow::playFile()
     }
 }
 
+void MainWindow::playSpn()
+{
+    if(timer_->isActive())
+    {
+        timer_->stop();
+    }
+    else
+    {
+        timer_->start(1000 / 10);
+    }
+}
+
 void MainWindow::convert()
 {
     if(filename_.isEmpty()) return;
-    converter_->convert(filename_, ledsNumberEdit_->text().toInt(),
-                        segmentsNumberEdit_->text().toInt());
+    playSpnButton_->setEnabled(false);
+    if(timer_->isActive()) timer_->stop();
+    QtConcurrent::run(converter_,
+                      &SpinnerConverter::convert,
+                      filename_,
+                      ledsNumberEdit_->text().toInt(),
+                      segmentsNumberEdit_->text().toInt());
     resultAnimation_ = converter_->getAnimation();
-    startTimer(1000 / 10);
 }
