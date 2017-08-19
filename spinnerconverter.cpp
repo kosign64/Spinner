@@ -27,8 +27,10 @@ void SpinnerConverter::convert(const QString &filename,
         frame_ = movie.currentImage();
         frame_ = frame_.scaled(size_, size_, Qt::IgnoreAspectRatio,
                                Qt::SmoothTransformation);
-        convertFrame(frame_);
-        animation_.push_back(frame_);
+        QImage drawImage = QImage(frame_.size(),
+                                  QImage::Format_RGBA8888);
+        convertFrame(frame_, drawImage);
+        animation_.push_back(drawImage);
         movie.jumpToNextFrame();
         emit progress(i / static_cast<double>(movie.frameCount()) * 100);
     }
@@ -36,39 +38,18 @@ void SpinnerConverter::convert(const QString &filename,
     emit done();
 }
 
-void SpinnerConverter::convertFrame(QImage &frame)
+void SpinnerConverter::convertFrame(const QImage &frame,
+                                    QImage &drawFrame)
 {
-    QImage tmp = frame;
-    QPainter painter(&frame);
+    QPainter painter(&drawFrame);
     painter.setRenderHints(QPainter::Antialiasing, true);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QBrush(Qt::black));
+    painter.setBrush(QBrush(QColor(0, 0, 0, 255)));
     painter.drawRect(0, 0, size_, size_);
-    QPainterPath path;
-    path.addEllipse(QPointF(frame.width() / 2,
-                            frame.height() / 2),
-                    frame.width() / 2,
-                    frame.height() / 2);
-    painter.setClipPath(path);
-    painter.drawImage(0, 0, tmp);
-    painter.save();
-    painter.translate(frame.width() / 2, frame.height() / 2);
-    painter.drawEllipse(QPoint(0, 0), static_cast<int>(holeRadius_),
+    painter.setBrush(QBrush(QColor(0, 0, 0, 255)));
+    painter.drawEllipse(QPoint(size_ / 2, size_ / 2),
+                        static_cast<int>(holeRadius_),
                         static_cast<int>(holeRadius_));
-    QPen pen(Qt::black);
-    pen.setWidth(1);
-    painter.setPen(pen);
-    painter.setBrush(Qt::NoBrush);
-    for(double r = holeRadius_; r < size_ / 2; r += led_)
-    {
-        painter.drawEllipse(QPointF(0, 0), r, r);
-    }
-    for(double degree = 0.; degree <= 360.; degree += segment_)
-    {
-        painter.rotate(segment_);
-        painter.drawLine(QPointF(0, 0), QPointF(0, size_ / 2));
-    }
-    painter.restore();
     QImage floodImg = QImage(frame.size(), QImage::Format_Mono);
     QPainter floodPainter(&floodImg);
     floodPainter.setPen(Qt::NoPen);
@@ -93,7 +74,7 @@ void SpinnerConverter::convertFrame(QImage &frame)
     for(double degree = 0.; degree <= 360.; degree += segment_)
     {
         floodPainter.rotate(segment_);
-        floodPainter.drawLine(QPoint(0, 0), QPoint(0, size_ / 2));
+        floodPainter.drawLine(QPoint(0, 0), QPoint(0, size_ / 1.9));
     }
     floodPainter.restore();
     QImage floodImg2 = floodImg;
@@ -105,19 +86,24 @@ void SpinnerConverter::convertFrame(QImage &frame)
         for(double led = holeRadius_ + led_ / 2; led < size_ / 2;
             led += led_)
         {
-            int x = led * cos(seg * M_PI / 180.) + size_ / 2;
-            int y = led * sin(seg * M_PI / 180.) + size_ / 2;
+            int x = led * sin(seg * M_PI / 180.) + size_ / 2;
+            int y = led * cos(seg * M_PI / 180.) + size_ / 2;
+            QPoint point(x, y);
 //            qDebug() << size_ << led << seg << x << y <<
 //                        x - size_ / 2 << y - size_ / 2 <<
 //                        floodImg.pixelColor(x, y) <<
 //                        QColor(Qt::color1);
-//            floodImg.setPixelColor(x, y, Qt::black);
-            QColor color = floodColor(QPoint(x, y),
+            floodPainter2.drawPoint(point);
+            QColor color = floodColor(point,
                                       floodImg,
                                       frame, floodPainter);
-            floodPaint(QPoint(x, y), color, floodImg2, frame,
-                       painter,
-                       floodPainter2);
+            color.setAlpha(128);
+            painter.setBrush(QBrush(color));
+            painter.drawEllipse(point, static_cast<int>(size_ * 0.02),
+                                static_cast<int>(size_ * 0.02));
+//            floodPaint(QPoint(x, y), color, floodImg2, drawFrame,
+//                       painter,
+//                       floodPainter2);
         }
     }
     floodPainter.end();
@@ -162,7 +148,8 @@ void SpinnerConverter::recursFloodColor(QPoint point, QImage &flood,
 }
 
 void SpinnerConverter::floodPaint(QPoint point, const QColor &color,
-                                  QImage &flood, QImage &frame, QPainter &painter,
+                                  QImage &flood, QImage &frame,
+                                  QPainter &painter,
                                   QPainter &floodPainter)
 {
     if(flood.pixelColor(point) != Qt::color0) return;

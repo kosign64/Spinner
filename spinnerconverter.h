@@ -30,7 +30,7 @@ private:
     double segment_;
     double led_;
 
-    void convertFrame(QImage &frame);
+    void convertFrame(const QImage &frame, QImage &drawFrame);
     QColor floodColor(QPoint start, QImage &flood,
                       const QImage &frame, QPainter &painter);
     void recursFloodColor(QPoint point, QImage &flood,
