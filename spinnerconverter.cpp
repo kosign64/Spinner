@@ -93,7 +93,7 @@ void SpinnerConverter::convertFrame(QImage &frame)
     for(double degree = 0.; degree <= 360.; degree += segment_)
     {
         floodPainter.rotate(segment_);
-        floodPainter.drawLine(QPoint(0, 0), QPoint(0, size_ / 2));
+        floodPainter.drawLine(QPoint(0, 0), QPoint(0, size_ / 1.9));
     }
     floodPainter.restore();
     QImage floodImg2 = floodImg;
@@ -105,8 +105,8 @@ void SpinnerConverter::convertFrame(QImage &frame)
         for(double led = holeRadius_ + led_ / 2; led < size_ / 2;
             led += led_)
         {
-            int x = led * cos(seg * M_PI / 180.) + size_ / 2;
-            int y = led * sin(seg * M_PI / 180.) + size_ / 2;
+            int x = led * sin(seg * M_PI / 180.) + size_ / 2;
+            int y = led * cos(seg * M_PI / 180.) + size_ / 2;
 //            qDebug() << size_ << led << seg << x << y <<
 //                        x - size_ / 2 << y - size_ / 2 <<
 //                        floodImg.pixelColor(x, y) <<
