@@ -19,7 +19,6 @@ void SpinnerConverter::convert(const QString &filename,
     movie.stop();
     movie.jumpToFrame(0);
     animation_.clear();
-    qDebug() << segmentsNumber;
     segment_ = 360. / segmentsNumber;
     led_ = (size_ / 2 - holeRadius_) / ledNumber;
     for(int i = 0; i < movie.frameCount(); ++i)
