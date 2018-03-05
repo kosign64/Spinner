@@ -4,6 +4,7 @@
 #include <QPainterPath>
 #include <QDebug>
 #include <QLabel>
+#include <cmath>
 
 SpinnerConverter::SpinnerConverter(int size, QObject *parent) :
     QObject(parent),
