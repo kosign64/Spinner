@@ -15,6 +15,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QProgressBar>
 #include <QTimer>
+#include <QIntValidator>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -86,6 +87,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     mainWidget_->setLayout(mainLayout_);
     setCentralWidget(mainWidget_);
+
+    QIntValidator *validator = new QIntValidator(this);
+    validator->setBottom(1);
+    ledsNumberEdit_->setValidator(validator);
+    segmentsNumberEdit_->setValidator(validator);
 
     originalAnimation_ = new QMovie(this);
     converter_ = new SpinnerConverter(imageWidgetSize, this);
